@@ -1,0 +1,171 @@
+{
+  "board_id": "356",
+  "days": "10",
+  "cached_at": "2025-11-20T12:30:12.194702",
+  "tickets": {
+    "board_id": "356",
+    "days_looked_back": 10,
+    "search_text": "all tickets",
+    "count": 13,
+    "tickets": [
+      {
+        "jira_ticket_key": "DS-1188",
+        "summary": "Exploring Agent SDK OpenAI for orchestration layer for Workday Agent",
+        "assignee": "Abhimanyu Yadav",
+        "description": "Not available",
+        "status": "In Progress",
+        "created_date": "2025-11-12",
+        "reporter": "Abhimanyu Yadav",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1189",
+        "summary": "Initial Workday Agent with 4 Core Tools (Leave, Compensation, Personal & Work Contact)",
+        "assignee": "Abhimanyu Yadav",
+        "description": "Not available",
+        "status": "In Progress",
+        "created_date": "2025-11-12",
+        "reporter": "Abhimanyu Yadav",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1181",
+        "summary": "Creating Jira Agent on Tools",
+        "assignee": "Nishi Paul",
+        "description": "Created Jira Agent for listing the Jira tickets as per user query. Tested using CrewAI and. Dify.\n\nThings Done -\n\n* User needs to set up using their credentials.\n* User can pass the number of days for which they want to look into the tickets\n* User will pass query and will receive the specific tickets details as response matching with query\n\n\n\nThings to do -\n\n* Create, Update operation",
+        "status": "Blocked",
+        "created_date": "2025-11-12",
+        "reporter": "Nishi Paul",
+        "priority": "Medium",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1182",
+        "summary": "Creating ServiceNow Agent on Tools",
+        "assignee": "Nishi Paul",
+        "description": "Created servicenow tool both on dify and crewai. It will list all the available incidents and tasks related to an account.\n\nTo do -\n\n* Create an account\n* Try performing create and Update operation",
+        "status": "Blocked",
+        "created_date": "2025-11-12",
+        "reporter": "Nishi Paul",
+        "priority": "Medium",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1183",
+        "summary": "Creating Google Calendar Agent on Tools",
+        "assignee": "Nishi Paul",
+        "description": "Not available",
+        "status": "Blocked",
+        "created_date": "2025-11-12",
+        "reporter": "Nishi Paul",
+        "priority": "Medium",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1184",
+        "summary": "Exploring GCP Guardrail",
+        "assignee": "Nishi Paul",
+        "description": "Not available",
+        "status": "Blocked",
+        "created_date": "2025-11-12",
+        "reporter": "Nishi Paul",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1185",
+        "summary": "Periodic training - Feature/label drift exp",
+        "assignee": "Chandra Shekhar Kasaudhan",
+        "description": "Not available",
+        "status": "New",
+        "created_date": "2025-11-12",
+        "reporter": "Chandra Shekhar Kasaudhan",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1186",
+        "summary": "Periodic training - exps train/eval",
+        "assignee": "Chandra Shekhar Kasaudhan",
+        "description": "Not available",
+        "status": "New",
+        "created_date": "2025-11-12",
+        "reporter": "Chandra Shekhar Kasaudhan",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1187",
+        "summary": "Confluence page for Search flow and FAQ",
+        "assignee": "Chandra Shekhar Kasaudhan",
+        "description": "Not available",
+        "status": "In Progress",
+        "created_date": "2025-11-12",
+        "reporter": "Chandra Shekhar Kasaudhan",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1192",
+        "summary": "DELETE - Summary",
+        "assignee": "Binay Kumar Gupta",
+        "description": "Not available",
+        "status": "New",
+        "created_date": "2025-11-16",
+        "reporter": "Binay Kumar Gupta",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1193",
+        "summary": "Add Automated Vault Token Refresh",
+        "assignee": "Himal Mangla",
+        "description": "Not available",
+        "status": "Closed",
+        "created_date": "2025-11-17",
+        "reporter": "Himal Mangla",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1195",
+        "summary": "Test/Enable Redis Caching for LLM Gateway",
+        "assignee": "Himal Mangla",
+        "description": "Not available",
+        "status": "New",
+        "created_date": "2025-11-19",
+        "reporter": "Himal Mangla",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      },
+      {
+        "jira_ticket_key": "DS-1196",
+        "summary": "Add Function Calling Feature in LiteLLM",
+        "assignee": "Himal Mangla",
+        "description": "Not available",
+        "status": "New",
+        "created_date": "2025-11-19",
+        "reporter": "Himal Mangla",
+        "priority": "Low",
+        "function_lead": "N/A",
+        "success": true
+      }
+    ],
+    "from_cache": false,
+    "success": true
+  }
+}

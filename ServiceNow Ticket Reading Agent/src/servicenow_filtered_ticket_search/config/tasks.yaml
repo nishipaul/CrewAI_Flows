@@ -1,0 +1,57 @@
+---
+test_servicenow_connection:
+  description: Establish and verify connection to the ServiceNow instance using the
+    provided {base_url}, {username}, and {password}. Test the authentication and confirm
+    that the credentials work properly before proceeding with ticket retrieval.
+  expected_output: A confirmation message indicating whether the ServiceNow connection
+    was successful or failed, including any relevant error details if the connection
+    failed.
+  agent: servicenow_connection_manager
+search_filtered_servicenow_tickets:
+  description: Search and retrieve ServiceNow tickets that match the {user_query}
+    using the provided {base_url}, {username}, and {password}. Search tickets from
+    the last {days} days and limit results to {limit} tickets. Search across ticket
+    descriptions, summaries, assigned users, and states to find relevant matches.
+    Return complete details for each matching ticket including task ID, incident ID,
+    summary, full detailed description, assigned to, priority, state, creation date,
+    and all other available fields.
+  expected_output: "A filtered list of up to {limit} ServiceNow tickets from the last
+    {days} days that match the search query \"{user_query}\". For each matching ticket
+    include: ticket numbers, incident IDs, task IDs, summary/short description, full
+    detailed description (if different from summary), assigned to (person/group),
+    priority levels, urgency, state, creation dates, updated dates, and all other
+    relevant details. \n\n**ADDITIONALLY:** Use the ServiceNow Data Formatter Tool
+    to create a downloadable CSV format of the filtered ticket data. Include the raw
+    CSV text content at the end of the response for easy copy/paste or download.\n\n**FORMAT:**
+    Present results as a numbered list with clear ticket details showing both short
+    and full descriptions, followed by summary statistics (total found, total returned
+    after limit, time period: {days} days)."
+  agent: servicenow_all_tickets_analyst
+  context:
+  - test_servicenow_connection
+servicenow_operation_summary:
+  description: Provide a comprehensive summary of the filtered ServiceNow tickets
+    matching the query "{user_query}" from the last {days} days based on the context
+    from previous tasks. Consolidate and present the filtered ticket data in an organized
+    format for easy analysis, including detailed descriptions for each ticket.
+  expected_output: |-
+    A final comprehensive summary of the {limit} ServiceNow tickets from the last {days} days that matched the search query "{user_query}". Include:
+    - Search query used and number of results returned
+    - Time period covered ({days} days)
+    - Key statistics and patterns found in the filtered results
+    - Organized listing by categories (priority, state, assignment status)
+    - Summary of ticket types (incidents vs tasks)
+    - DETAILED TICKET DESCRIPTIONS: For each ticket found, include:
+      * Ticket number and type
+      * Short description/summary
+      * Full detailed description (if available and different from summary)
+      * Priority and state information
+      * Assignment details
+      * Creation and update dates
+    - Quick insights about the filtered dataset
+
+    Format the results clearly for easy analysis and decision-making with complete ticket details and descriptions.
+  agent: servicenow_connection_manager
+  context:
+  - test_servicenow_connection
+  - search_filtered_servicenow_tickets

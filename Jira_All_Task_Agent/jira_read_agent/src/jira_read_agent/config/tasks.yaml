@@ -1,0 +1,1346 @@
+search_tickets_task:
+  description: >
+    Fetch ALL Jira tickets from the board using the search_jira_tickets tool OR load from cache.
+    
+    Board ID: {board_key}
+    Days to look back: {days}
+    User Query: {user_query}
+    
+    CRITICAL STEPS:
+    1. Call the search_jira_tickets tool with:
+       - board_id: {board_key}
+       - days_to_look_back: {days}
+       - search_text: ""  (EMPTY - fetch ALL tickets, not filtered)
+    
+    2. The tool will:
+       - Check if cache file exists for today
+       - If YES: Load ALL tickets from cache file (instant)
+       - If NO: Fetch ALL tickets from Jira API and save to cache
+    
+    3. Return ALL ticket data including:
+       - Ticket ID (jira_ticket_key)
+       - Summary
+       - Assignee
+       - Created Date
+       - Status
+       - Priority
+       - Description
+       - Function Lead
+       - Reporter
+    
+    4. Pass ALL tickets to the next agent who will filter based on user query: "{user_query}"
+    
+    IMPORTANT: 
+    - Fetch ALL tickets, not filtered by search_text
+    - Let the analyst agent do the filtering
+    - This ensures cache contains complete data for all queries
+  expected_output: >
+    Complete list of ALL tickets from the board:
+    - Total count of tickets found
+    - Each ticket with: ID, summary, assignee, created_date, status, priority, description, function_lead, reporter
+    - All data unfiltered and ready for the analyst to search through
+    - Message indicating if loaded from cache or fetched from API
+  agent: jira_search_agent
+
+analyze_tickets_task:
+  description: >
+    Analyze ALL ticket data from the search agent and answer the user's question: {user_query}
+    
+    CRITICAL FIRST STEP:
+    1. You received ALL tickets from board {board_key} (last {days} days)
+    2. FILTER these tickets based on the user query: "{user_query}"
+    3. Search in: summary, description, assignee, status, priority for matches
+    
+    Your responsibilities:
+    1. Filter the tickets to find matches for: "{user_query}"
+    2. Answer the user's specific question based ONLY on MATCHING tickets
+    3. Handle different question types:
+       - "Who is working on X?" → Filter tickets about X, then list assignees
+       - "Since when is she/he working on this?" → Show created_date for that person's tickets
+       - "What's the status?" → Show status from matching tickets
+       - "When were these created?" → List creation dates of matching tickets
+       - "Tell me about ticket X" → Show full details of that specific ticket
+       - "What's the priority?" → Show priority levels of matching tickets
+       - Any other ticket-related question → Filter and answer from the data
+    
+    4. If NO tickets match the query:
+       Say: "I couldn't find any tickets matching '{user_query}' in the last {days} days on board {board_key}."
+    
+    5. If asked something UNRELATED to tickets (weather, sports, jokes, general knowledge):
+       Politely respond: "I can only answer questions about the Jira tickets we found. I can tell you about
+       assignees, creation dates, statuses, priorities, descriptions, summaries, function leads, and other
+       ticket details. What would you like to know about these tickets?"
+    
+    6. Be conversational and helpful
+    7. Always end with: "Would you like to know anything else about these tickets?"
+    
+    ERROR HANDLING:
+    - If NO tickets received from search: "I couldn't find any tickets. Please check the board ID and try again."
+    - If NO tickets match after filtering: "I couldn't find any tickets matching '{user_query}' in the last {days} days on board {board_key}."
+    - If data is incomplete: "Some ticket data is missing. The results may be incomplete."
+    - If you cannot answer the question: "I don't have enough information to answer that question. Please try rephrasing or ask about specific ticket details."
+    
+    CRITICAL: 
+    - FILTER tickets based on user query FIRST
+    - Use ONLY the filtered ticket data
+    - Show actual ticket IDs, assignee names, and details
+    - Never make up information
+    - If you cannot answer, clearly explain why
+  expected_output: >
+    A clear, conversational answer to the user's question based on FILTERED ticket data.
+    
+    Format:
+    - Direct answer to the question with REAL ticket data
+    - List of matching tickets with: ID, assignee, summary, status
+    - Relevant ticket details to support the answer
+    - Invitation for follow-up questions
+    
+    Example responses:
+    - For "Who is working on content safety?": 
+      "Based on tickets about content safety, the following people are working on it:
+      - Alice Johnson (DS-1234: Content Safety Filter Implementation)
+      - Bob Smith (DS-1236: Safety Rules Update)
+      
+      Would you like to know anything else about these tickets?"
+    
+    - For "Since when is Alice working on this?": 
+      "Alice has been working on this since October 15, 2024. Details:
+      - DS-1234: Created on 2024-10-15
+      - DS-1235: Created on 2024-10-20
+      
+      Would you like to know anything else about these tickets?"
+  agent: ticket_analyst_agent
+  context:
+    - search_tickets_task
+
+analyze_bandwidth_task:
+  description: >
+    Analyze workload and bandwidth based on user query: "{user_query}"
+    
+    Board: {board_key} | Days: {days}
+    
+    MANDATORY FIRST STEP: Load ticket data
+    1. Use the load_cached_tickets tool with:
+       - board_id: {board_key}
+       - days: {days}
+    2. This will return ALL tickets from the cache
+    3. If tool returns error, inform user that data is not available
+    
+    STEP 2: Determine what user wants
+    - If query asks for "bandwidth of [specific person]" or "bandwidth for [name]" → Show ONLY that person's bandwidth
+    - If query asks for "all assignees bandwidth" or "team bandwidth" or "show bandwidth" or "all members" → Show ALL assignees
+    
+    STEP 3: Calculate bandwidth from the loaded tickets
+    
+    For bandwidth calculation:
+    - Group tickets by assignee
+    - For EACH assignee, calculate:
+      * Total number of tickets assigned
+      * Hours busy (based on priority: High=8h, Medium=4h, Low=2h per ticket)
+      * Hours free (assuming 40h work week: 40h - hours_busy)
+      * Workload Status:
+        - Overloaded: >40 hours
+        - Busy: 20-40 hours  
+        - Available: <20 hours
+    
+    STEP 3: Present results based on query type
+    
+    A) For SPECIFIC ASSIGNEE query (e.g., "bandwidth of Alice"):
+       - Show ONLY that person's bandwidth
+       - Include: Name, Tickets count, Hours busy, Hours free, Status
+       - List ALL their tickets with complete details
+       - Format:
+         
+         BANDWIDTH REPORT FOR [FULL NAME]
+         
+         WORKLOAD SUMMARY:
+         - Total Tickets: X
+         - Hours Busy: Xh
+         - Hours Free: Xh
+         - Status: [Overloaded/Busy/Available]
+         
+         ALL ASSIGNED TICKETS:
+         
+         1. [Ticket ID]: [Full Summary]
+            - Priority: [High/Medium/Low] (Xh)
+            - Status: [Status]
+            - Created: [Date]
+            - Description: [Brief description]
+         
+         2. [Ticket ID]: [Full Summary]
+            - Priority: [High/Medium/Low] (Xh)
+            - Status: [Status]
+            - Created: [Date]
+            - Description: [Brief description]
+         
+         ... (list ALL tickets)
+         
+         ANALYSIS:
+         - [Name] has [X] tickets totaling [Y] hours
+         - Current workload is [light/moderate/heavy]
+         - [Recommendation based on workload]
+    
+    B) For ALL ASSIGNEES query (e.g., "show bandwidth", "team bandwidth"):
+       - Show ALL assignees sorted by hours busy (highest to lowest)
+       - Include summary at the end
+       - Format:
+         TEAM BANDWIDTH REPORT
+         Total Assignees: X | Total Tickets: Y
+         
+         1. [Name]
+            - Tickets: X | Hours Busy: Xh | Hours Free: Xh
+            - Status: [Overloaded/Busy/Available]
+            - Tickets: [DS-1, DS-2, ...]
+         
+         2. [Name]
+            ...
+         
+         SUMMARY:
+         
+         OVERLOADED (>40h): X people
+         - [Names of overloaded people]
+         
+         BUSY (20-40h): X people
+         - [Names of busy people]
+         
+         AVAILABLE (<20h): X people
+         - [Names of available people]
+         
+         RECOMMENDATION:
+         - Reassign work from overloaded members to available members
+         - [Specific suggestions based on data]
+    
+    ERROR HANDLING:
+    - If load_cached_tickets returns error: "I couldn't load the ticket data. Please ensure tickets have been fetched first by asking a search query."
+    - If no tickets found: "No tickets found for board {board_key} in the last {days} days."
+    - If specific assignee not found: Use get_all_assignees tool to show available assignees
+    - If calculation fails: "I encountered an error calculating bandwidth. Please try again."
+    
+    CRITICAL: 
+    - ALWAYS use load_cached_tickets tool first
+    - Detect if query is for specific person or all assignees
+    - Use REAL ticket data and assignee names
+    - Calculate hours accurately based on priority
+    - Provide actionable summary with recommendations
+    - Never make up information
+    - If you cannot answer, clearly state why and what's needed
+  expected_output: >
+    Bandwidth report based on query type:
+    
+    FOR SPECIFIC ASSIGNEE:
+    BANDWIDTH FOR [NAME]
+    - Tickets: X
+    - Hours Busy: Xh
+    - Hours Free: Xh
+    - Status: [Overloaded/Busy/Available]
+    
+    Ticket Details:
+    1. DS-XXXX: [Summary] (Priority: High, 8h)
+    2. DS-XXXX: [Summary] (Priority: Medium, 4h)
+    
+    FOR ALL ASSIGNEES:
+    TEAM BANDWIDTH REPORT
+    Total Assignees: X | Total Tickets: Y
+    
+    1. [Name] - Hours Busy: Xh | Hours Free: Xh | Status: [Status]
+    2. [Name] - Hours Busy: Xh | Hours Free: Xh | Status: [Status]
+    ...
+    
+    SUMMARY:
+    🔴 OVERLOADED (>40h): X people
+    - [Names]
+    
+    🟡 BUSY (20-40h): X people
+    - [Names]
+    
+    🟢 AVAILABLE (<20h): X people
+    - [Names]
+    
+    RECOMMENDATION:
+    - [Actionable suggestions based on data]
+    
+    Would you like to see bandwidth for a specific assignee?
+  agent: bandwidth_analyzer_agent
+  context:
+    - search_tickets_task
+
+allocate_task_task:
+  description: >
+    Provide intelligent task allocation recommendation based on user query: "{user_query}"
+    
+    Board: {board_key} | Days: {days}
+    
+    USER SCENARIO:
+    User states: 
+    - "Ticket [ID] is important, who should do it?" OR
+    - "I have a high priority ticket about [topic], whom should I assign it?" OR
+    - "Who should work on [topic]?" OR
+    - "[Topic] needs to be done, who should do it?" OR
+    - "Can you assign ticket from [Person A] to [Person B]?" OR
+    - "Reassign from [Person A] to [Person B]" OR
+    - "Move ticket from [Person A] to [Person B]" OR
+    - "Assign DS-XXX to [Person]" OR
+    - "I want to assign DS-XXX to [Person]"
+    
+    YOUR PROCESS:
+    
+    STEP 1: Detect Query Type
+    
+    Check the query pattern:
+    
+    Pattern A: "Assign DS-XXX to [Person]" or "I want to assign DS-XXX to [Person]"
+    - User provides BOTH ticket ID AND target person
+    - Extract ticket ID (e.g., DS-1184)
+    - Extract target person name (e.g., Binay Gupta)
+    - GO TO STEP 1A (Direct Assignment Flow)
+    
+    Pattern B: "Assign from [Person A] to [Person B]"
+    - Look for patterns: "assign from", "reassign from", "move from", "transfer from"
+    - Extract source person name (Person A)
+    - Extract target person name (Person B)
+    - GO TO STEP 1B (Reassignment Flow)
+    
+    Pattern C: General allocation query
+    - GO TO STEP 1C (Regular Allocation Flow)
+    
+    STEP 1A: Direct Assignment Flow (DS-XXX to Person)
+    
+    CRITICAL: User has provided BOTH ticket ID and target person. PERFORM THE UPDATE IMMEDIATELY.
+    
+    Sub-step 1: Extract information
+    - Extract ticket ID (e.g., DS-1184)
+    - Extract target person name (e.g., Binay Gupta)
+    
+    Sub-step 2: Verify ticket exists
+    - Use get_jira_ticket tool to verify the ticket exists
+    - If not found: Return error message
+    
+    Sub-step 3: Get bandwidth for target person (optional check)
+    - Get target person's current workload
+    - Check if they're overloaded (>45h)
+    - If overloaded: Warn but still proceed if user insists
+    
+    Sub-step 4: DELEGATE to update agent to perform the assignment
+    - Use update_jira_ticket tool with:
+      * ticket_id: [extracted ticket ID]
+      * assignee: [target person name]
+    - Return success message with link
+    
+    CRITICAL: DO NOT say "I do not have the capability to update". YOU DO HAVE THE CAPABILITY.
+    CRITICAL: ALWAYS delegate to update agent to perform the actual update.
+    CRITICAL: Return the updated ticket link and confirmation.
+    
+    Response format:
+    "Ticket DS-XXX has been assigned to [Person]!
+    
+    Updated Ticket Details:
+    - ID: DS-XXX
+    - Link: [JIRA-URL]
+    - Assignee: [Person] (UPDATED)
+    - Summary: [Summary]
+    - Priority: [Priority]
+    
+    The ticket has been successfully reassigned."
+    
+    STEP 1B: Reassignment Flow (from Person A to Person B)
+    
+    Sub-step 1: Load ALL ticket data
+    - Use load_cached_tickets tool
+    
+    Sub-step 2: Get bandwidth for BOTH persons
+    - Get Person A's current tickets and workload
+    - Get Person B's current tickets and workload
+    - Calculate hours busy/free for both
+    
+    Sub-step 3: Analyze and recommend
+    - Show Person A's workload (tickets, hours)
+    - Show Person B's workload (tickets, hours)
+    - Determine if reassignment makes sense
+    - Provide recommendation with reasoning
+    
+    Sub-step 4: Ask for confirmation with ticket specification
+    - Format response as:
+      " BANDWIDTH ANALYSIS:
+      
+      Person A: [X] tickets ([Y]h busy, [Z]h free)
+      - Tickets: [List all ticket IDs]
+      
+      Person B: [X] tickets ([Y]h busy, [Z]h free)
+      - Tickets: [List all ticket IDs]
+      
+      RECOMMENDATION: [Yes, reassign / No, not recommended]
+      
+      REASON: [Brief explanation based on workload]
+      
+      If you'd like to proceed with reassignment, please specify which ticket(s) to reassign.
+      Example: 'Yes, reassign DS-123 from Person A to Person B'"
+    - STOP and wait for user response with ticket ID
+    
+    STEP 1C: Regular Allocation Flow
+    
+    Sub-step 1: Load ALL ticket data
+    - Use load_cached_tickets tool with board_id: {board_key}, days: {days}
+    - Get complete ticket information
+    
+    Sub-step 2: Identify the ticket in question
+    - If user mentions ticket ID (e.g., DS-1234): Find that specific ticket
+    - If user mentions topic/feature (e.g., "MCP management"): Search for matching tickets
+    - If NO existing ticket found: Treat as NEW task with estimated priority/hours from user's description
+    - Get ticket details: priority, summary, description, current assignee (if any)
+    - If NEW task: Use priority from user query (high/medium/low) and estimate hours accordingly
+    
+    Sub-step 3: Analyze team bandwidth
+    - Use get_all_assignees tool to get list of team members
+    - For EACH team member, calculate:
+      * Current tickets count
+      * Hours busy (High=8h, Medium=4h, Low=2h)
+      * Hours free (40h - hours_busy)
+      * Workload status (Overloaded/Busy/Available)
+    
+    STEP 2: Consider allocation factors (for Regular Flow)
+    - Ticket priority (High/Medium/Low)
+    - Ticket estimated hours
+    - Team member availability
+    - Current workload distribution
+    - Avoid overloading anyone (>40h)
+    
+    STEP 3: Make recommendation (for Regular Flow)
+    - Recommend the BEST person for this task
+    - Provide DETAILED reasoning
+    - Consider alternatives if primary choice unavailable
+    - Suggest task redistribution if needed
+    
+    RECOMMENDATION FORMAT (CONCISE):
+    
+    ASSIGN TO: [Full Name]
+    
+    REASON:
+    - Currently has [X] tickets ([Y]h busy, [Z]h free)
+    - Current tickets: [List ticket IDs]
+    - This [Priority] task adds [N]h → Total will be [Y+N]h
+    - Status: [Available/Busy/Manageable] workload
+    - [Any relevant experience or context]
+    
+    ALTERNATIVES (if primary unavailable):
+    - [Name 2]: [X] tickets ([Y]h busy, [Z]h free)
+    - [Name 3]: [X] tickets ([Y]h busy, [Z]h free)
+    
+    [If anyone overloaded, add warning]:
+    WARNING: NOTE: [Name] is overloaded ([X]h) - do not assign more work
+    
+    ---
+    
+    FORMAT EXAMPLE:
+    
+    ASSIGN TO: David Lee
+    
+    REASON:
+    - Currently has 3 tickets (12h busy, 28h free)
+    - Current tickets: DS-1100, DS-1150, DS-1180
+    - This High priority task adds 8h → Total will be 20h
+    - Status: Available workload, can handle additional work
+    - Has experience with similar MCP work (DS-1100)
+    
+    ALTERNATIVES:
+    - Emma Davis: 2 tickets (8h busy, 32h free)
+    - Carol White: 4 tickets (16h busy, 24h free)
+    
+    WARNING: NOTE: Alice Johnson is near capacity (38h) - avoid assigning more work
+    
+    CRITICAL:
+    - If user provides "Assign DS-XXX to [Person]": IMMEDIATELY delegate to update agent to perform the assignment
+    - DO NOT say "I do not have the capability to update" - YOU DO via delegation to update agent
+    - ALWAYS use load_cached_tickets first for analysis
+    - Handle BOTH existing tickets AND new tasks
+    - If ticket ID mentioned: Find that specific ticket
+    - If topic mentioned: Search for related tickets OR treat as new task
+    - Extract priority from user query (high/medium/low)
+    - Base recommendations on REAL bandwidth data
+    - Consider workload balance, not just availability
+    - KEEP RESPONSE SHORT AND CONCISE
+    - Focus on: WHO to assign, their CURRENT tickets and hours, WHY them
+    - List their current ticket IDs
+    - Show hours calculation (current + new task)
+    - Provide 1-2 alternatives
+    - Flag overloaded members
+    - Never assign to overloaded team members
+    - NO long explanations, NO detailed analysis sections
+    - JUST: Name, Reason (tickets + hours), Alternatives
+    - When ticket ID + person provided: PERFORM THE UPDATE via delegation
+  expected_output: >
+    A CONCISE task allocation recommendation or direct assignment confirmation.
+    
+    FOR DIRECT ASSIGNMENT ("assign DS-XXX to Person"):
+    
+    Ticket DS-XXX has been assigned to [Person]!
+    
+    Updated Ticket Details:
+    - ID: DS-XXX
+    - Link: [JIRA-URL]
+    - Assignee: [Person] (UPDATED)
+    - Summary: [Summary]
+    - Priority: [Priority]
+    
+    The ticket has been successfully reassigned.
+    
+    ---
+    
+    FOR REASSIGNMENT QUERIES ("assign from X to Y"):
+    
+    BANDWIDTH ANALYSIS:
+    
+    [Person A]: X tickets (Yh busy, Zh free)
+    - Tickets: DS-123, DS-456, DS-789
+    
+    [Person B]: X tickets (Yh busy, Zh free)
+    - Tickets: DS-111, DS-222
+    
+    RECOMMENDATION: [Yes, reassign / No, not recommended]
+    
+    REASON: [Brief explanation based on workload comparison]
+    
+    If you'd like to proceed with reassignment, please specify which ticket(s) to reassign.
+    Example: 'Yes, reassign DS-123 from [Person A] to [Person B]'
+    
+    ---
+    
+    FOR REGULAR ALLOCATION QUERIES:
+    
+    ASSIGN TO: [Name]
+    
+    REASON:
+    - Currently has X tickets (Yh busy, Zh free)
+    - Current tickets: [IDs]
+    - This task adds Nh → Total will be Xh
+    - Status: [Available/Busy/Manageable]
+    - [Relevant experience if any]
+    
+    ALTERNATIVES:
+    - [Name]: X tickets (Yh busy, Zh free)
+    
+    [Warning if anyone overloaded]
+    
+    CRITICAL: Keep response SHORT and FOCUSED on WHO and WHY based on their tickets and hours.
+  agent: task_allocation_agent
+  context:
+    - search_tickets_task
+
+create_jira_ticket_task:
+  description: >
+    Create a NEW Jira ticket by extracting information from the user query.
+    
+    User Query: {user_query}
+    
+    CRITICAL: This is a TICKET CREATION task, NOT a ticket search task.
+    - DO NOT fetch existing tickets
+    - DO NOT call search_jira_tickets tool
+    - DO NOT load cached tickets
+    - ONLY focus on creating a NEW ticket
+    - DO NOT activate any other agent
+    
+    PROJECT KEY: ALWAYS use "DS" (not {board_key})
+    
+    YOUR PROCESS:
+    
+    STEP 1: Analyze the user query "{user_query}"
+    
+    Check if the user has provided ticket information:
+    - Look for "Summary:" or "summary:" 
+    - Look for "Description:" or "description:"
+    - Look for "Acceptance Criteria:" or "acceptance criteria:"
+    - Look for "Priority:" or "priority:"
+    - Look for "Assignee:" or "assignee:"
+    - Look for "Agile Team:" or "agile team:" or "team:"
+    - Look for "Story Points:" or "story points:" or "points:"
+    
+    STEP 2: Extract information
+    
+    If user has provided information (contains "Summary:" or similar):
+    - Extract Summary: Text after "Summary:" or "summary:"
+    - Extract Description: Text after "Description:" or "description:"
+    - Extract Acceptance Criteria: Text after "Acceptance Criteria:" or "acceptance criteria:"
+    - Extract Priority: Text after "Priority:" or "priority:" (default: Medium)
+    - Extract Assignee: Text after "Assignee:" or "assignee:" (optional)
+    - Extract Agile Team: Text after "Agile Team:" or "team:" (optional)
+    - Extract Story Points: Number after "Story Points:" or "points:" (optional)
+    
+    If information is provided, GO TO STEP 3.
+    
+    If NO information provided (just "create ticket" or similar):
+    - Respond: "Great! I'll help you create a new Jira ticket on project DS. Please provide:
+      
+      Summary: [one line title]
+      Description: [detailed explanation]
+      Acceptance Criteria: [what needs to be done]
+      Priority: [High/Medium/Low]
+      Assignee: [name or blank]
+      Agile Team: [team or blank]
+      Story Points: [1,2,3,5,8,13 or blank]"
+    - STOP here and wait for user response
+    
+    STEP 3: Validate extracted information
+    
+    - Ensure Summary is not empty
+    - Ensure Description is not empty
+    - Ensure Acceptance Criteria is not empty
+    - Validate Priority is High, Medium, or Low (default: Medium if not specified)
+    - If assignee provided, validate using get_all_assignees tool
+    - Validate story points is 1, 2, 3, 5, 8, 13, or blank
+    
+    STEP 4: Create the ticket IMMEDIATELY
+    
+    DO NOT ask for confirmation. CREATE IMMEDIATELY with:
+    - board_id: "DS" (ALWAYS "DS")
+    - summary: [extracted]
+    - description: [extracted] + "\n\nAcceptance Criteria:\n" + [acceptance criteria]
+    - assignee: [extracted or None]
+    - priority: [extracted or "Medium"]
+    - additional_fields: {"Agile Team": [extracted], "Story Points": [extracted]}
+    
+    STEP 5: Return result
+    
+    Show ticket details with link:
+    " Ticket created successfully!
+    
+    Ticket Details:
+    - ID: DS-[NUMBER]
+    - Link: [JIRA-URL]
+    - Summary: [summary]
+    - Description: [description]
+    - Acceptance Criteria: [criteria]
+    - Assignee: [assignee]
+    - Priority: [priority]
+    - Agile Team: [team]
+    - Story Points: [points]
+    
+    The ticket has been created on project DS."
+    
+    CRITICAL RULES:
+    - board_id MUST be "DS" (project key), NOT "356"
+    - If user provides info, extract and CREATE IMMEDIATELY
+    - DO NOT ask for confirmation if info is provided
+    - DO NOT loop - create on first valid input
+    - Include acceptance criteria in description field
+    - DO NOT call any other agent during this process
+    
+    CRITICAL RULES:
+    - Ask ONE question at a time (don't overwhelm user)
+    - Validate each input before moving to next
+    - Be conversational and friendly
+    - Show progress (e.g., "Step 2 of 6")
+    - Allow user to go back and change previous answers
+    - Collaborate with other agents:
+      * Use get_all_assignees to validate assignee
+      * Use bandwidth_analyzer to suggest best assignee if user asks
+    - After creation, ALWAYS provide the ticket link
+    - ALWAYS ask if they want to create more or continue
+    
+    EXAMPLE CONVERSATIONS:
+    
+    Example 1 - User provides all info:
+    
+    User: "Summary: Extensive Jira agent for search and create. Description: creating a jira agent that can list the tasks, look into bandwidth, suggest task allocation, handle unrelated query, create and update jira tickets. acceptance criteria: agent should be able to handle the description list gracefully without failing. priority is medium. assignee: Nishi Paul. story point: 8."
+    
+    Agent: Extracts all information and creates immediately
+    
+    Agent: " Ticket created successfully!
+    
+    Ticket Details:
+    - ID: DS-1234
+    - Link: https://your-domain.atlassian.net/browse/DS-1234
+    - Summary: Extensive Jira agent for search and create
+    - Description: creating a jira agent that can list the tasks, look into bandwidth, suggest task allocation, handle unrelated query, create and update jira tickets
+    - Acceptance Criteria: agent should be able to handle the description list gracefully without failing
+    - Assignee: Nishi Paul
+    - Priority: Medium
+    - Agile Team: None
+    - Story Points: 8
+    
+    The ticket has been created on project DS."
+    
+    Example 2 - User just asks to create:
+    
+    User: "create jira new ticket"
+    
+    Agent: "Great! I'll help you create a new Jira ticket on project DS. Please provide:
+    
+    Summary: [one line title]
+    Description: [detailed explanation]
+    Acceptance Criteria: [what needs to be done]
+    Priority: [High/Medium/Low]
+    Assignee: [name or blank]
+    Agile Team: [team or blank]
+    Story Points: [1,2,3,5,8,13 or blank]"
+    
+    User: "Summary: Fix login bug. Description: Users cannot login. Acceptance Criteria: Login works. Priority: High. Assignee: David Lee. Story Points: 5."
+    
+    Agent: " Ticket created successfully!
+    
+    Ticket Details:
+    - ID: DS-1235
+    - Link: https://your-domain.atlassian.net/browse/DS-1235
+    - Summary: Fix login bug
+    - Description: Users cannot login
+    - Acceptance Criteria: Login works
+    - Assignee: David Lee
+    - Priority: High
+    - Story Points: 5
+    
+    The ticket has been created on project DS."
+    
+    ERROR HANDLING:
+    - Invalid assignee: "Assignee '[name]' not found. Available assignees: [list]. Please choose from this list."
+    - Invalid priority: "Priority must be High, Medium, or Low. Please specify."
+    - Invalid story points: "Story points must be 1, 2, 3, 5, 8, 13, or None."
+    - Missing required field: "This field is required. Please provide [field name]."
+    - Creation failed: "Failed to create ticket: [error]. Would you like to try again?"
+    
+    NOTE: Project key is automatically set to "DS" - no validation needed from user
+  expected_output: >
+    ONE of two responses:
+    
+    IF user provided information in query:
+    - Extract all fields
+    - Create ticket IMMEDIATELY
+    - Return success message with ticket details
+    
+    IF user did NOT provide information:
+    - Ask for information in simple format
+    - Wait for next input (will be handled in next execution)
+    
+    Final output format when ticket is created:
+    
+    Ticket created successfully!
+    
+    Ticket Details:
+    - ID: DS-[NUMBER]
+    - Link: [JIRA-URL]
+    - Summary: [extracted]
+    - Description: [extracted]
+    - Acceptance Criteria: [extracted]
+    - Assignee: [extracted or Unassigned]
+    - Priority: [extracted or Medium]
+    - Agile Team: [extracted or None]
+    - Story Points: [extracted or None]
+    
+    The ticket has been created on project DS.
+    
+    CRITICAL: If info provided, create IMMEDIATELY. NO confirmation, NO loops.
+  agent: jira_creation_agent
+
+update_jira_ticket_task:
+  description: >
+    Update an existing Jira ticket by searching for it first, then applying updates.
+    
+    User Query: {user_query}
+    
+    CRITICAL: This is a TICKET UPDATE task, NOT a creation or search task.
+    - ONLY focus on updating an EXISTING ticket
+    - DO NOT create new tickets (delegate to creation agent if needed)
+    - DO NOT activate any other agent unless ticket not found
+    - DO NOT search for tickets or analyze ticket data
+    
+    CRITICAL ANTI-LOOP RULE:
+    - If user provides "Ticket ID: DS-XXX" AND any field like "Assignee: Name", this means they are providing ALL info
+    - In this case: Extract ticket ID, extract fields, search ticket, update IMMEDIATELY
+    - DO NOT show current details
+    - DO NOT ask for more information
+    - DO NOT enter a loop
+    - Just UPDATE and return success message
+    
+    YOUR PROCESS:
+    
+    STEP 1: Detect Information Provided
+    
+    Check if the user's query contains:
+    A) Ticket ID (DS-XXX format OR "Ticket ID: DS-XXX")
+    B) Update fields (e.g., "Summary:", "Priority:", "Assignee:")
+    
+    CRITICAL DETECTION RULES:
+    - If query contains "Ticket ID: DS-XXX" AND any field like "Assignee:", "Summary:", "Priority:" → SCENARIO 1
+    - If query contains "DS-XXX" (without field labels) → SCENARIO 2
+    - If query contains NO ticket ID → SCENARIO 3
+    
+    SCENARIO 1: Both Ticket ID AND Update Fields Provided
+    Examples:
+    - "Ticket ID: DS-123, Assignee: Nishi Paul"
+    - "Ticket ID: DS-123\nAssignee: Nishi Paul\nPriority: High"
+    - "update DS-123 Summary: New summary, Priority: High"
+    
+    Action:
+    - Extract ticket ID from "Ticket ID: DS-XXX" or "DS-XXX" pattern
+    - Extract ALL update fields (Summary, Description, Assignee, Priority, etc.)
+    - Use `get_jira_ticket` tool to verify ticket exists
+    - If found: Use `update_jira_ticket` tool with ALL extracted fields
+    - If not found: Ask if user wants to create new ticket
+    - Return success message with link
+    - CRITICAL: Update IMMEDIATELY. NO confirmation, NO additional prompts, NO loops.
+    
+    SCENARIO 2: Only Ticket ID Provided (e.g., "update DS-123", "DS-123" without any field labels)
+    
+    CRITICAL: This scenario ONLY applies if the query has ONLY the ticket ID with NO field labels like "Assignee:", "Summary:", etc.
+    
+    Examples that trigger SCENARIO 2:
+    - "update DS-123" (ONLY ticket ID, no fields)
+    - "DS-123" (ONLY ticket ID, no fields)
+    - "modify ticket DS-456" (ONLY ticket ID, no fields)
+    
+    Examples that DO NOT trigger SCENARIO 2 (these go to SCENARIO 1):
+    - "Ticket ID: DS-123, Assignee: Nishi Paul" (has field label → SCENARIO 1)
+    - "DS-123 Assignee: Nishi Paul" (has field label → SCENARIO 1)
+    
+    Action:
+    - Extract ticket ID
+    - Use `get_jira_ticket` tool to get current details
+    - DO NOT ask for updates in multiple steps
+    - Instead, immediately ask for ALL fields with ticket ID in ONE message:
+      "I found ticket DS-XXX. To update it, please provide:
+      
+      Ticket ID: DS-XXX (confirmed)
+      Summary: [new value or leave blank]
+      Description: [new value or leave blank]
+      Assignee: [new name or leave blank]
+      Priority: [High/Medium/Low or leave blank]
+      Agile Team: [new team or leave blank]
+      Story Points: [1,2,3,5,8,13 or leave blank]
+      
+      Provide only fields you want to UPDATE in the format above."
+    - STOP and wait for user response with ALL fields
+    
+    SCENARIO 3: NO Ticket ID Provided (e.g., "update a jira ticket")
+    
+    Action:
+    - Ask for BOTH ticket ID AND updates in ONE message:
+      "I'll help you update a Jira ticket!
+      
+      Please provide the ticket ID and update details in this format:
+      
+      Ticket ID: DS-XXX
+      Summary: [new value or leave blank]
+      Description: [new value or leave blank]
+      Acceptance Criteria: [new value or leave blank]
+      Assignee: [new name or leave blank]
+      Priority: [High/Medium/Low or leave blank]
+      Agile Team: [new team or leave blank]
+      Story Points: [1,2,3,5,8,13 or leave blank]
+      
+      Example:
+      Ticket ID: DS-123
+      Summary: Enhanced feature
+      Priority: High
+      Assignee: Alice Johnson"
+    - STOP and wait for user response
+    
+    STEP 2: Parse the user's response
+    
+    CRITICAL: If the user's query contains ANY field label (Assignee:, Summary:, Priority:, etc.) along with a ticket ID, 
+    this means they are providing update information. GO DIRECTLY TO STEP 3.
+    
+    Once user provides information, extract:
+    - Ticket ID: Look for "Ticket ID: DS-XXX" or standalone "DS-XXX" pattern
+    - Summary: Look for "Summary:" line (if present)
+    - Description: Look for "Description:" line (if present)
+    - Acceptance Criteria: Look for "Acceptance Criteria:" line (if present)
+    - Assignee: Look for "Assignee:" line (if present)
+    - Priority: Look for "Priority:" line (if present)
+    - Agile Team: Look for "Agile Team:" line (if present)
+    - Story Points: Look for "Story Points:" line (if present)
+    - Status: Look for "Status:" line (if present)
+    
+    CRITICAL: If you extracted a ticket ID AND at least one field (e.g., Assignee: Nishi Paul), 
+    proceed IMMEDIATELY to STEP 3 to search and update. DO NOT ask for more information.
+    
+    STEP 3: Search for the ticket
+    
+    Use the get_jira_ticket tool with the extracted ticket ID.
+    
+    If ticket FOUND:
+      - GO TO STEP 4
+    
+    If ticket NOT FOUND:
+      - Respond: " Ticket [ID] was not found in the system.
+        
+        Would you like to create a new ticket instead? (Yes/No)"
+      - STOP and wait for user response
+      - If user says "Yes": Delegate to jira_creation_agent
+      - If user says "No": Respond: "How else can I help you today?"
+    
+    STEP 4: Validate update information
+    
+    Validate the extracted fields:
+    - If assignee provided, validate it exists
+    - Validate priority is High, Medium, or Low (if provided)
+    - Validate story points is 1, 2, 3, 5, 8, 13 (if provided)
+    - Validate status is valid Jira status (if provided)
+    
+    STEP 5: Update the ticket
+    
+    Use update_jira_ticket tool with:
+    - ticket_id: [extracted ID]
+    - summary: [new value or None to keep current]
+    - description: [new value or None to keep current]
+    - assignee: [new value or None to keep current]
+    - priority: [new value or None to keep current]
+    - status: [new value or None to keep current]
+    - additional_fields: {"Agile Team": [new value], "Story Points": [new value]}
+    
+    STEP 6: Return result
+    
+    Show updated ticket details:
+    " Ticket [ID] updated successfully!
+    
+    Updated Ticket Details:
+    - ID: [ID]
+    - Link: [JIRA-URL]
+    - Summary: [updated or current]
+    - Description: [updated or current]
+    - Assignee: [updated or current]
+    - Priority: [updated or current]
+    - Status: [updated or current]
+    - Agile Team: [updated or current]
+    - Story Points: [updated or current]
+    
+    The ticket has been updated successfully."
+    
+    CRITICAL RULES:
+    - Ask for BOTH ticket ID AND updates in ONE message if not provided
+    - Search for ticket before attempting update
+    - If ticket not found, offer to create new ticket
+    - Only update fields that user provides
+    - Keep current values for fields not mentioned
+    - Validate all inputs before updating
+    - Handle errors gracefully
+    - NO multi-step conversations - collect all info in ONE go
+    - If info provided, update IMMEDIATELY without confirmation
+  expected_output: >
+    A single-step process that collects all information at once, then updates the ticket.
+    
+    Example 1 (Initial Prompt - No Info):
+    I'll help you update a Jira ticket!
+    
+    Please provide the ticket ID and update details in this format:
+    
+    Ticket ID: DS-XXX
+    Summary: [new value or leave blank]
+    Description: [new value or leave blank]
+    Assignee: [new name or leave blank]
+    Priority: [High/Medium/Low or leave blank]
+    Agile Team: [new team or leave blank]
+    Story Points: [1,2,3,5,8,13 or leave blank]
+    
+    Example:
+    Ticket ID: DS-123
+    Summary: Enhanced feature
+    Priority: High
+    Assignee: Alice Johnson
+    
+    Example 2 (Ticket Updated):
+    Ticket DS-123 updated successfully!
+    
+    Updated Ticket Details:
+    - ID: DS-123
+    - Link: https://your-domain.atlassian.net/browse/DS-123
+    - Summary: Enhanced feature (UPDATED)
+    - Priority: High (UPDATED)
+    - Assignee: Alice Johnson (UPDATED)
+    
+    The ticket has been updated successfully.
+  agent: jira_update_agent
+
+draft_communication_task:
+  description: >
+    Draft messages or communication plans for team members based on workload, bandwidth, and ticket data.
+    
+    User Query: {user_query}
+    
+    CRITICAL: This is a COMMUNICATION DRAFTING task.
+    - Focus on helping users communicate with team members about workload, capacity, or tickets
+    - Collaborate with bandwidth_analyzer_agent to get workload data
+    - Collaborate with jira_search_agent to get specific ticket details
+    - Draft multiple message options with different tones
+    - Provide clear choices (a, b, c) for the user
+    
+    YOUR PROCESS:
+    
+    STEP 1: Identify Communication Intent
+    
+    Detect what the user wants to communicate about:
+    - Workload/capacity check (e.g., "message Charlie about being overloaded")
+    - Task assignment discussion (e.g., "ask Alice if she can take this ticket")
+    - Status update request (e.g., "check with Bob on ticket progress")
+    - Meeting scheduling (e.g., "schedule 1:1 with team member")
+    
+    STEP 2: Gather Context
+    
+    Before drafting messages, collect relevant information:
+    - If about workload: Use bandwidth_analyzer_agent to get hours assigned, ticket counts
+    - If about specific tickets: Use jira_search_agent to get ticket details
+    - If about a person: Get their current assignments and workload
+    
+    Example context gathering:
+    "Let me first check Charlie's current workload..."
+    [Collaborate with bandwidth_analyzer_agent]
+    "Charlie has 52 hours assigned across 8 tickets (3 High priority, 4 Medium, 1 Low)"
+    
+    STEP 3: Draft Message Options
+    
+    Provide 2-3 message options with different tones:
+    
+    Option a) Casual/Friendly Check-in
+    - Warm, conversational tone
+    - Non-confrontational
+    - Example: "Hey [Name], how's your capacity looking? Want to sync up?"
+    
+    Option b) Manager-Focused/Professional
+    - Direct but supportive
+    - Includes specific data
+    - Example: "Hi [Name], I noticed you have [X] hours assigned. Do you need support or should we reprioritize?"
+    
+    Option c) Action-Oriented (Meeting/Calendar)
+    - Suggests concrete next steps
+    - Proposes meeting or discussion
+    - Example: "Let's schedule a 15-min 1:1 to discuss your current workload and priorities. Does [time] work?"
+    
+    STEP 4: Present Options Clearly
+    
+    CRITICAL FORMAT - Use this EXACT format:
+    "I can draft a message. Should I:
+    
+    a) Send a casual check-in: '[short message text]'
+    
+    b) Send manager-focused: '[short message with key data]'
+    
+    c) Schedule a 1:1 via calendar integration?"
+    
+    IMPORTANT:
+    - Keep option text SHORT and concise (one sentence each)
+    - Option a) should be friendly and casual
+    - Option b) should include specific hours/data
+    - Option c) should always be about calendar/meeting scheduling
+    - Do NOT ask "Which approach would you prefer?" - just present the options
+    
+    STEP 5: Handle User Selection
+    
+    When user selects an option:
+    - Provide the full message text ready to copy/send
+    - Offer to refine or adjust the message
+    - Ask if they need help with anything else
+    
+    CRITICAL RULES:
+    - Always gather context BEFORE drafting messages
+    - Include relevant data (hours, tickets) in manager-focused messages
+    - Keep casual messages warm and non-threatening
+    - Offer multiple options to give user control
+    - Be empathetic - workload discussions are sensitive
+    - Never draft accusatory or negative messages
+    - Focus on support and collaboration
+    - Suggest meetings for complex discussions
+  expected_output: >
+    A concise set of 3 message options in the exact format specified.
+    
+    Example Output:
+    
+    I can draft a message. Should I:
+    
+    a) Send a casual check-in: 'How's capacity looking on your plate?'
+    
+    b) Send manager-focused: 'I notice 52 hours assigned. Need support?'
+    
+    c) Schedule a 1:1 via calendar integration?
+  agent: communication_assistant_agent
+
+analyze_skill_overlap_task:
+  description: >
+    Analyze employee skills based on Jira ticket history and identify team members with overlapping skills for potential task reallocation.
+    
+    User Query: {user_query}
+    
+    CRITICAL: This task is triggered ONLY when user explicitly requests skill matching or task allocation analysis.
+    - This is NOT triggered automatically after bandwidth queries
+    - User must explicitly ask for: "skill match", "who can do", "whom can I allocate", "similar skills", etc.
+    - Analyze the target employee's ticket history to identify their skill areas
+    - Compare with all other team members' ticket histories
+    - Create a skill overlap report with match percentages
+    - Suggest potential task reallocation based on skills and workload
+    - Ask user if they want to reallocate tasks
+    
+    YOUR PROCESS:
+    
+    STEP 1: Extract Target Employee Name
+    
+    From the user query, identify which employee's bandwidth was requested.
+    Look for patterns like:
+    - "bandwidth of [Name]"
+    - "bandwidth for [Name]"
+    - "[Name]'s bandwidth"
+    - "what is [Name]'s bandwidth"
+    
+    Extract the employee name from the query.
+    
+    STEP 2: Get Target Employee's Tickets
+    
+    Use the cached ticket data to get all tickets assigned to the target employee.
+    Extract from each ticket:
+    - Summary (contains task type keywords)
+    - Description (contains technical details)
+    - Keywords like: "content safety", "API", "UI", "backend", "frontend", "data", "infrastructure", "security", etc.
+    
+    Example:
+    "Analyzing [Employee]'s ticket history...
+    
+    [Employee]'s Tickets:
+    - DS-123: Content moderation on User Query
+    - DS-456: API endpoint for content filtering
+    - DS-789: Safety rules implementation
+    
+    Identified Skill Areas:
+    - Content Safety (3 tickets)
+    - API Development (1 ticket)
+    - Backend Systems (2 tickets)"
+    
+    STEP 3: Identify Skill Categories
+    
+    Categorize the target employee's skills based on ticket content:
+    - Content Safety/Moderation
+    - API Development
+    - Frontend/UI Development
+    - Backend Systems
+    - Data Analysis
+    - Infrastructure/DevOps
+    - Security
+    - Testing/QA
+    - Documentation
+    - Other (specify)
+    
+    Count tickets per category to determine primary vs secondary skills.
+    
+    STEP 4: Analyze All Other Employees
+    
+    For each other team member:
+    - Get their ticket history
+    - Identify their skill categories
+    - Calculate skill overlap with target employee
+    - Get their current workload (hours busy/free)
+    
+    STEP 5: Calculate Skill Match Percentage
+    
+    For each team member, calculate:
+    - Skill Match % = (Overlapping skill categories / Target employee's skill categories) × 100
+    - Workload Status: Available (<40 hours) / Moderate (40-45 hours) / Busy (>45 hours)
+    - Capacity to Take Tasks: Yes/No based on workload
+    
+    STEP 6: Create Skill Overlap Report
+    
+    Present the report in this format:
+    
+    "SKILL OVERLAP ANALYSIS FOR [EMPLOYEE]
+    
+    [Employee]'s Skill Profile:
+    - Primary Skills: [skill 1] (X tickets), [skill 2] (Y tickets)
+    - Secondary Skills: [skill 3] (Z tickets)
+    - Total Tickets: N
+    - Current Workload: X hours (Status)
+    
+    Team Members with Similar Skills:
+    
+    1. [Name] - Skill Match: XX%
+       - Overlapping Skills: [skill 1], [skill 2]
+       - Tickets in Common Areas: N tickets
+       - Current Workload: Y hours (Available/Moderate/Busy)
+       - Can Take Tasks: Yes/No
+       - Recommendation: [High/Medium/Low priority for reallocation]
+    
+    2. [Name] - Skill Match: XX%
+       [... same format ...]
+    
+    3. [Name] - Skill Match: XX%
+       [... same format ...]
+    
+    REALLOCATION OPPORTUNITIES:
+    - [Employee] has X hours assigned
+    - [Name 1] has similar skills and Y hours available
+    - [Name 2] has similar skills and Z hours available
+    
+    Potential tasks to reallocate:
+    - DS-XXX: [Summary] → Could be handled by [Name 1] (Skill Match: XX%)
+    - DS-YYY: [Summary] → Could be handled by [Name 2] (Skill Match: XX%)"
+    
+    STEP 7: Ask for Reallocation Decision
+    
+    After showing the report, ask:
+    "Would you like to reallocate some of [Employee]'s tasks to team members with similar skills?
+    
+    If yes, please specify:
+    1. Which employee should receive the tasks (e.g., [Name 1], [Name 2])
+    2. Which specific ticket(s) to reassign (e.g., DS-123, DS-456)
+    
+    Example: 'Reallocate DS-123 to Alice Johnson'
+    
+    Or reply 'No' if you don't want to reallocate at this time."
+    
+    STEP 8: Handle User Response
+    
+    If user says "No":
+    - Respond: "Understood. The skill analysis is complete. Let me know if you need anything else."
+    - END task
+    
+    If user provides employee name and ticket(s):
+    - Extract: target_employee_name, ticket_ids
+    - Validate that the target employee has matching skills
+    - Collaborate with task_allocation_agent to verify the allocation makes sense
+    - Prepare for update_agent to reassign the ticket(s)
+    - Respond: "I'll help you reallocate [ticket_ids] to [target_employee_name]. Let me verify this is a good match..."
+    - DELEGATE to task_allocation_agent for final recommendation
+    - Then DELEGATE to update_agent to perform the reassignment
+    
+    CRITICAL RULES:
+    - Only activate AFTER a detailed bandwidth report for a specific employee
+    - Analyze ALL team members for skill overlap
+    - Calculate skill match percentages based on ticket content
+    - Consider current workload when suggesting reallocation
+    - Ask user for confirmation before any reallocation
+    - Collaborate with task_allocation_agent for validation
+    - Collaborate with update_agent for actual ticket reassignment
+    - If no overlapping skills found, inform user clearly
+    - Present data in clear, organized format
+    - Focus on optimal skill utilization and workload balance
+  expected_output: >
+    A comprehensive skill overlap analysis report followed by a reallocation prompt.
+    
+    Example Output:
+    
+    SKILL OVERLAP ANALYSIS FOR NISHI PAUL
+    
+    Nishi Paul's Skill Profile:
+    - Primary Skills: Content Safety (4 tickets), API Development (2 tickets)
+    - Secondary Skills: Backend Systems (1 ticket)
+    - Total Tickets: 7 tickets
+    - Current Workload: 52 hours (Overloaded)
+    
+    Team Members with Similar Skills:
+    
+    1. Alice Johnson - Skill Match: 85%
+       - Overlapping Skills: Content Safety, API Development
+       - Tickets in Common Areas: 5 tickets
+       - Current Workload: 28 hours (Available)
+       - Can Take Tasks: Yes
+       - Recommendation: HIGH priority for reallocation
+    
+    2. Bob Smith - Skill Match: 60%
+       - Overlapping Skills: Content Safety
+       - Tickets in Common Areas: 3 tickets
+       - Current Workload: 42 hours (Moderate)
+       - Can Take Tasks: Yes
+       - Recommendation: MEDIUM priority for reallocation
+    
+    3. Charlie Davis - Skill Match: 40%
+       - Overlapping Skills: API Development
+       - Tickets in Common Areas: 2 tickets
+       - Current Workload: 48 hours (Busy)
+       - Can Take Tasks: No
+       - Recommendation: LOW priority for reallocation
+    
+    REALLOCATION OPPORTUNITIES:
+    - Nishi Paul has 52 hours assigned (12 hours over capacity)
+    - Alice Johnson has similar skills and 12 hours available
+    - Bob Smith has similar skills and can take 1-2 more tasks
+    
+    Potential tasks to reallocate:
+    - DS-1157: Content moderation on User Query → Could be handled by Alice Johnson (Skill Match: 85%)
+    - DS-1158: API endpoint for safety rules → Could be handled by Alice Johnson (Skill Match: 85%)
+    - DS-1159: Content filtering implementation → Could be handled by Bob Smith (Skill Match: 60%)
+    
+    Would you like to reallocate some of Nishi Paul's tasks to team members with similar skills?
+    
+    If yes, please specify:
+    1. Which employee should receive the tasks (e.g., Alice Johnson, Bob Smith)
+    2. Which specific ticket(s) to reassign (e.g., DS-1157, DS-1158)
+    
+    Example: 'Reallocate DS-1157 to Alice Johnson'
+    
+    Or reply 'No' if you don't want to reallocate at this time.
+  agent: skill_matching_agent
+
+send_slack_message_task:
+  description: >
+    Send a message to Slack channel or user based on user request.
+    
+    User Query: {user_query}
+    
+    CRITICAL: This task is triggered ONLY when user explicitly asks to send a message to Slack.
+    - Extract recipient (channel or user)
+    - Extract message content
+    - Send message using Slack integration
+    - Confirm delivery
+    
+    YOUR PROCESS:
+    
+    STEP 1: Extract Information from User Query
+    
+    IMPORTANT: The channel is ALWAYS taken from SLACK_CHANNEL in .env (all-agent-testing-workspace).
+    DO NOT ask the user for the channel. Use the default channel from credentials.
+    
+    Look for message content in the query:
+    
+    CASE A - Direct Message (e.g., "send hi to slack", "send hello to slack"):
+    Extract the message between "send" and "to slack":
+    - "send hi to slack" → Message: "hi"
+    - "send hello world to slack" → Message: "hello world"
+    - "send great work to slack" → Message: "great work"
+    
+    CASE B - Previous Response (e.g., "send this message to slack"):
+    If the user says "send this message" or "send this to slack" or "send the above",
+    the message content will be provided in the query after "Send this message to slack:" or similar.
+    Extract the ENTIRE message content that follows.
+    
+    Examples:
+    - "send hi to slack"
+      → Message: "hi", Channel: from .env (all-agent-testing-workspace)
+    
+    - "send hello world to slack"
+      → Message: "hello world", Channel: from .env
+    
+    - "send this message to slack: [long message content]"
+      → Message: [entire content after colon], Channel: from .env
+    
+    STEP 2: Validate Message Content
+    
+    Check if message content is extracted:
+    - If message found: GO TO STEP 3 (use default channel from .env)
+    - If message NOT found: Ask "What message would you like to send to Slack?"
+    
+    DO NOT ask for channel/recipient - it's always from SLACK_CHANNEL in .env
+    
+    STEP 3: Send Message to Slack
+    
+    Use the send_slack_message tool with:
+    - channel: Use SLACK_CHANNEL from .env (all-agent-testing-workspace)
+    - message: The extracted message content
+    
+    The tool will automatically use credentials from .env file
+    
+    STEP 4: Confirm Delivery
+    
+    After sending, provide simple confirmation:
+    "Message delivered to Slack successfully!"
+    
+    ERROR HANDLING:
+    - If Slack API fails: "Failed to send message to Slack. Error: [error message]"
+    - If recipient not found: "Could not find [recipient] in Slack. Please check the channel/user name."
+    - If authentication fails: "Slack authentication failed. Please check credentials."
+    
+    CRITICAL RULES:
+    - ONLY activate when user explicitly asks to send Slack message
+    - Extract message content from user query
+    - ALWAYS use SLACK_CHANNEL from .env (all-agent-testing-workspace)
+    - DO NOT ask for channel - it's from credentials
+    - Validate message content before sending
+    - Provide simple confirmation: "Message delivered to Slack successfully!"
+    - DO NOT send messages without user explicitly requesting it
+  expected_output: >
+    A simple confirmation that the message was delivered to Slack.
+    
+    Example Output:
+    
+    Message delivered to Slack successfully!
+  agent: slack_message_sender_agent

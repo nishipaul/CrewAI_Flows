@@ -1,0 +1,24 @@
+-- Virtual environment named "crew_venv" is created
+-- crew_venv is activated
+
+-- Libraries are installed - pip install crew crewai_tools
+
+-- Start the crewai project.
+    -- Project 1 
+        -- Project Setup -
+                 - jira_read_agent -> crewai create crew jira_read_agent
+                                   -> Select provider and give needed credentials
+                                   -> cd to the new project folder created
+
+                 - Do - pip install uv
+                 - Now perform - crewai install
+                 - Then do - uv add "crewai[azure-ai-inference]"
+                 - Now try to run the project and see if its working fine - crewai run
+                 - You will see Crew Completion showing the final output
+        
+        -- Task specific project setup -
+                - For performing Jira reading action, place the CrewAI token in .env file like - CREWAI_PLATFORM_INTEGRATION_TOKEN=your_enterprise_token
+
+        
+
+    

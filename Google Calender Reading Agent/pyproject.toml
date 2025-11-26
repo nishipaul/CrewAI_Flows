@@ -1,0 +1,24 @@
+[project]
+name = "google_calendar_analytics_assistant"
+version = "0.1.0"
+description = "google_calendar_analytics_assistant using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[litellm,tools]==1.4.1",
+]
+
+[project.scripts]
+google_calendar_analytics_assistant = "google_calendar_analytics_assistant.main:run"
+run_crew = "google_calendar_analytics_assistant.main:run"
+train = "google_calendar_analytics_assistant.main:train"
+replay = "google_calendar_analytics_assistant.main:replay"
+test = "google_calendar_analytics_assistant.main:test"
+run_with_trigger = "google_calendar_analytics_assistant.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

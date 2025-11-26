@@ -1,0 +1,30 @@
+---
+fetch_calendar_events:
+  description: Use the Google Calendar Events By Attendee tool to retrieve all calendar
+    events for {attendee_email} over the specified time period of {days} days. Extract
+    complete event information including titles, dates, times, locations, and all
+    attendees for each event. Ensure all relevant events where the specified email
+    appears as an attendee are captured.
+  expected_output: A complete dataset of calendar events for {attendee_email} including
+    event details, attendee lists, dates, times, and locations, formatted as structured
+    data ready for analysis.
+  agent: calendar_data_analyst
+generate_calendar_analysis_report:
+  description: "Analyze the retrieved calendar events data and create a comprehensive
+    report for {attendee_email} covering {days} days starting from today. For single
+    day (days=0), show summary for today only. For multiple days, show individual
+    summaries for each date PLUS a consolidated summary across all days. \n\nThe report
+    structure should be:\n1) Executive summary (consolidated across all days)  \n2)
+    Daily breakdown - individual summary for each date with events table\n3) Meeting
+    patterns analysis (recurring vs one-time, duration analysis across all days)\n4)
+    Time allocation by meeting types (consolidated)\n5) Potential scheduling conflicts
+    or overlaps (across all days)\n\nDO NOT include sections about attendee collaborators
+    or productivity recommendations."
+  expected_output: A detailed, well-formatted calendar analysis report in markdown
+    format showing both per-day details and consolidated insights across the {days}
+    day period. For multiple days, include individual date sections plus consolidated
+    analysis. Focus on meeting analysis and scheduling insights for {attendee_email}
+    without including attendee collaboration details or productivity recommendations.
+  agent: calendar_report_generator
+  context:
+  - fetch_calendar_events
