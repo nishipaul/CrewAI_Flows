@@ -1,0 +1,28 @@
+# Campaign Planning Requirements
+# All fields below are required for a complete campaign plan
+
+requirements:
+  campaign_occasion:
+    description: "What occasion or theme is this campaign for? (e.g., Holi, Diwali, Christmas, New Year, Summer Sale, Festival, Holiday)"
+    required: true
+    value: null
+    
+  start_date:
+    description: "Campaign start date (must be today or a future date)"
+    required: true
+    value: null
+    
+  end_date:
+    description: "Campaign end date (must be after start date)"
+    required: true
+    value: null
+    
+  target_audience:
+    description: "Target audience demographics and characteristics (age, interests, location, etc.)"
+    required: true
+    value: null
+    
+  campaign_goal:
+    description: "Primary goal of the campaign (e.g., Sales, Brand Awareness, Engagement, Lead Generation)"
+    required: true
+    value: null

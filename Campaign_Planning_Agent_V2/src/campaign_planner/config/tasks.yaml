@@ -1,0 +1,297 @@
+extract_campaign_details_task:
+  description: >
+    Collect ALL required campaign details from the user. Keep asking until all fields are provided.
+    
+    ============ USER'S INPUT ============
+    {user_paragraph}
+    ======================================
+    
+    ============ REQUIRED FIELDS (ALL 5 MUST BE PROVIDED) ============
+    1. campaign_occasion - What occasion/theme/event is this campaign for?
+    2. start_date - When should the campaign start? (need explicit date)
+    3. end_date - When should the campaign end? (need explicit date)
+    4. target_audience - Who is the target audience?
+    5. campaign_goal - What is the campaign objective?
+    ===================================================================
+    
+    ============ CRITICAL INSTRUCTIONS ============
+    
+    STEP 1: Check the user's input for ALL 5 required fields.
+    
+    STEP 2: If ANY field is MISSING or UNCLEAR:
+    - DO NOT proceed to output JSON
+    - DO NOT make up, guess, or infer any values
+    - Ask the user to provide the missing information
+    - Be specific about what is missing
+    - Request the information in paragraph format
+    
+    STEP 3: Keep asking until the user explicitly provides ALL 5 fields.
+    
+    STEP 4: Only when ALL 5 fields are explicitly provided by the user,
+            output the structured JSON.
+    
+    ============ EXAMPLE INTERACTIONS ============
+    
+    USER: "I want a campaign for Holi"
+    YOU: "Great choice! I see you want a Holi campaign. However, I need more details:
+          
+          Please provide:
+          - When should the campaign start and end? (e.g., 10 March to 20 March)
+          - Who is your target audience? (e.g., young adults, families, professionals)
+          - What is your campaign goal? (e.g., brand awareness, increase sales)
+          
+          Please share these details so I can proceed."
+    
+    USER: "From 10 March to 20 March, targeting young adults aged 18-35"
+    YOU: "Thanks! I now have:
+          ✓ Occasion: Holi
+          ✓ Start Date: 10 March
+          ✓ End Date: 20 March  
+          ✓ Target Audience: Young adults aged 18-35
+          
+          I'm still missing one detail:
+          - What is your campaign goal? (e.g., brand awareness, increase sales, boost engagement)
+          
+          Please provide this to continue."
+    
+    USER: "The goal is to increase brand awareness"
+    YOU: [Now output the JSON since ALL 5 fields are provided]
+    
+    ============ NEVER DO THIS ============
+    - NEVER assume dates if not provided
+    - NEVER make up target audience
+    - NEVER infer campaign goals
+    - NEVER fill in any missing information yourself
+    ========================================
+  expected_output: >
+    ONLY when ALL 5 fields are explicitly provided by the user, output this JSON:
+    {
+      "campaign_occasion": "exact value from user",
+      "start_date": "YYYY-MM-DD (from user's date)",
+      "end_date": "YYYY-MM-DD (from user's date)",
+      "target_audience": "exact value from user",
+      "campaign_goal": "exact value from user"
+    }
+    
+    If any field is missing, your output should be a friendly message asking 
+    the user to provide the missing details.
+  agent: campaign_input_agent
+  human_input: true
+
+
+
+
+generate_campaign_outline_task:
+  description: >
+    Create a detailed campaign outline for multiple platforms based on the campaign details 
+    collected by Agent 1.
+    
+    ============ CAMPAIGN DETAILS FROM AGENT 1 ============
+    Agent 1 has already collected and verified ALL required details from the user:
+    - campaign_occasion: The occasion/theme
+    - start_date: Campaign start date (YYYY-MM-DD)
+    - end_date: Campaign end date (YYYY-MM-DD)
+    - target_audience: Who to target
+    - campaign_goal: What to achieve
+    
+    Use ONLY the values provided. Do NOT modify or assume anything.
+    =======================================================
+    
+    Using these details, create campaign plans for relevant platforms.
+    
+    ============ CAMPAIGN NAMING RULES ============
+    Create SHORT, CATCHY names (2-3 words) that include the occasion.
+    
+    GOOD: "Holi Buzz", "Holi Vibes", "Diwali Glow", "Christmas Cheer"
+    BAD: "Holi Email Marketing Campaign" (too long)
+    ================================================
+    
+    PLATFORMS TO CONSIDER:
+    - Email
+    - Facebook
+    - Instagram
+    - LinkedIn
+    - Twitter
+    - WhatsApp
+    - SMS
+    - Slack
+    
+    For each platform, explain:
+    1. Why it's suitable for this campaign
+    2. Content type to create
+    3. Posting schedule within the date range
+    4. How it helps achieve the goal
+    
+    Generate the complete campaign strategy outline.
+  expected_output: >
+    A comprehensive campaign strategy outline with:
+    - Short, catchy campaign names for each platform (2-3 words including occasion)
+    - Detailed paragraph for each platform explaining the strategy
+    - Clear explanation of how each platform helps achieve the campaign goal
+  agent: campaign_outline_agent
+
+
+
+
+finalize_campaign_table_task:
+  description: >
+    Create a structured table of all campaign items.
+    
+    For each campaign, provide:
+    - campaign_name: Short catchy name (2-3 words with occasion)
+    - platform: Email, Facebook, Instagram, LinkedIn, Twitter, WhatsApp, SMS, or Slack
+    - campaign_type: Promotional, Awareness, Engagement, or Announcement
+    - summary: Brief description related to the occasion
+    - start_date: Exact date from user input
+    - end_date: Exact date from user input
+    
+    Create 4-6 campaign items across different platforms.
+    
+    Display the table clearly and list available platforms at the end.
+  expected_output: >
+    Campaign table with 4-6 items:
+    
+    | Campaign Name | Platform | Type | Summary | Start | End |
+    |---------------|----------|------|---------|-------|-----|
+    | [Name]        | [Platform]| [Type]| [Summary]| [Date]| [Date]|
+    
+    Available platforms: [list]
+  agent: campaign_outline_agent
+
+
+
+
+
+generate_platform_content_task:
+  description: >
+    Generate ready-to-use campaign content for the user's selected platform.
+    
+    ============ CAMPAIGN CONTEXT ============
+    Campaign Details:
+    - Occasion: {campaign_occasion}
+    - Target Audience: {target_audience}
+    - Campaign Goal: {campaign_goal}
+    - Start Date: {start_date}
+    - End Date: {end_date}
+    
+    Campaign Table (from Phase 1):
+    {campaign_table_context}
+    ==========================================
+    
+    ============ USER'S SELECTED PLATFORM ============
+    The user has selected: {selected_platform}
+    
+    Generate content ONLY for this platform. Do NOT ask the user to select a platform.
+    ================================================
+    
+    ============ CONTENT GENERATION ============
+    Generate ACTUAL, READY-TO-USE content. NOT suggestions.
+    
+    The output should ONLY contain the content - no campaign details section.
+    
+    FOR EMAIL:
+    # [Occasion] Email Campaign
+    
+    **Subject:** [Actual subject line]
+    **Preheader:** [Actual preheader]
+    
+    ---
+    Dear [First Name],
+    
+    [Complete email body - engaging opening, main content, benefits, CTA]
+    
+    Warm regards,
+    [Brand]
+    
+    ---
+    [Footer with unsubscribe]
+    
+    FOR FACEBOOK:
+    # [Occasion] Facebook Campaign
+    
+    ## Post 1 - Launch
+    [Complete post with emojis, hashtags - ready to copy]
+    
+    ## Post 2 - Engagement
+    [Complete post with question/poll]
+    
+    ## Post 3 - Reminder
+    [Complete reminder post]
+    
+    FOR INSTAGRAM:
+    # [Occasion] Instagram Campaign
+    
+    ## Feed Post
+    [Hook in first line]
+    [Complete caption]
+    [Call to action]
+    .
+    .
+    [All 30 hashtags]
+    
+    ## Stories (5 frames)
+    [Frame by frame content]
+    
+    ## Reel Script
+    [Timestamped script]
+    
+    FOR LINKEDIN:
+    # [Occasion] LinkedIn Campaign
+    
+    ## Professional Post
+    [Complete professional post]
+    [Hashtags]
+    
+    FOR TWITTER:
+    # [Occasion] Twitter Campaign
+    
+    ## Tweet 1
+    [Complete tweet under 280 chars]
+    
+    ## Tweet 2
+    [Complete tweet under 280 chars]
+    
+    ## Thread
+    1/ [Tweet 1]
+    2/ [Tweet 2]
+    3/ [Tweet 3]
+    
+    FOR WHATSAPP:
+    # [Occasion] WhatsApp Campaign
+    
+    ## Broadcast Message
+    [Complete message with emojis]
+    
+    ## Status Updates
+    [Status content]
+    
+    FOR SMS:
+    # [Occasion] SMS Campaign
+    
+    ## Main SMS (under 160 chars)
+    [Complete SMS]
+    
+    ## Follow-up SMS
+    [Follow-up message]
+    
+    FOR SLACK:
+    # [Occasion] Slack Campaign
+    
+    ## Channel Announcement
+    [Complete announcement with emojis]
+    
+    ## Reminder
+    [Reminder message]
+    =============================================
+    
+    NO suggestions. NO recommendations. NO "you could try".
+    ONLY actual content that can be directly sent/posted.
+  expected_output: >
+    # [Occasion] [Platform] Campaign
+    
+    [Ready-to-use content only]
+    [No campaign details section]
+    [No recommendations]
+    [Actual content that can be copied and sent]
+  agent: plan_generation_agent
+  human_input: false
