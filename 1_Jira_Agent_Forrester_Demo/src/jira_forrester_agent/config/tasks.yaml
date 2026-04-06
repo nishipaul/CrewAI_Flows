@@ -1,0 +1,58 @@
+parse_query_task:
+  description: >
+    Parse the user's query: "{user_query}"
+    
+    Extract:
+    1. board_id: Look for a number in the query (e.g., "board 6088", "6088", "board id 6088")
+    2. action: 
+       - "show" if query contains: show, display, view, list, current
+       - "assign" if query contains: assign unassigned, assign tickets, assign tasks
+       - "rebalance" if query contains: rebalance, redistribute, balance, optimize
+       - Default to "rebalance" if unclear
+    
+    Return a JSON with: board_id (integer or null if not found), action ("show", "assign", or "rebalance")
+  expected_output: >
+    valid JSON with board_id and action
+  agent: query_parser_agent
+
+fetch_tickets_task:
+  description: >
+    Use the board_id from parse_query_task.
+    
+    If board_id is null or missing, return error: "Board ID is required. Please provide a board ID in your query."
+    
+    Otherwise, call fetch_jira_tickets tool with:
+    - board_id: the extracted board_id
+    - sprint_name: "{sprint_name}"
+    
+    If the tool returns an error (board doesn't exist), return the error message.
+  expected_output: >
+    The raw JSON string from fetch_jira_tickets tool, or an error message.
+  agent: ticket_fetcher_agent
+
+analyze_workload_task:
+  description: >
+    Take the action from parse_query_task and ticket data from fetch_tickets_task.
+    
+    If ticket data contains an error, just pass it through.
+    
+    Call calculate_workload tool with:
+    - ticket_data: the JSON from fetch_tickets_task
+    - action: the action from parse_query_task ("show", "assign", or "rebalance")
+    
+    For "show": returns current workload table
+    For "rebalance": returns current table, suggestions, projected table (suggestions only, no real changes)
+    For "assign": assigns unassigned tickets to members with least workload (REAL assignment in Jira)
+  expected_output: >
+    Formatted markdown report from the calculate_workload tool
+  agent: workload_analyzer_agent
+
+publish_results_task:
+  description: >
+    Take the formatted report from analyze_workload_task and return it exactly as-is.
+    
+    DO NOT modify the report. DO NOT add any extra text.
+    Just return the exact output from the previous task.
+  expected_output: >
+    The exact formatted report
+  agent: report_publisher_agent

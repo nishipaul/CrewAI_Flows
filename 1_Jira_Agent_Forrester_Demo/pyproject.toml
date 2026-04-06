@@ -1,0 +1,30 @@
+[project]
+name = "jira_forrester_agent"
+version = "0.1.0"
+description = "jira_forrester_agent using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[azure-ai-inference,tools]==1.7.2",
+    "langfuse>=3.0.0",
+    "python-dotenv>=1.0.0",
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-instrumentation-requests>=0.41b0",
+    "opentelemetry-instrumentation-httpx>=0.41b0",
+]
+
+[project.scripts]
+jira_forrester_agent = "jira_forrester_agent.main:run"
+run_crew = "jira_forrester_agent.main:run"
+train = "jira_forrester_agent.main:train"
+replay = "jira_forrester_agent.main:replay"
+test = "jira_forrester_agent.main:test"
+run_with_trigger = "jira_forrester_agent.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
