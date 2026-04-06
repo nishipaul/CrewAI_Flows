@@ -1,0 +1,600 @@
+[
+    {
+        "query_timestamp": "2026-01-12T10:42:16.640715",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T10:42:19.268740",
+                    "sentiment_analysis": {
+                        "input_text": "rebalance 6088",
+                        "sentiment_categories": {
+                            "positive": 0.01,
+                            "neutral": 0.99,
+                            "negative": 0.01,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 1.1684000492095947
+                    },
+                    "pii_check": {
+                        "input_text": "rebalance 6088",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 1.1827881336212158
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "content_safety": {
+                        "input_text": "rebalance 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 1.1907379627227783,
+                        "content_safety_detected": false
+                    },
+                    "prompt_injection": {
+                        "input_text": "rebalance 6088",
+                        "detected": false,
+                        "time_taken": 1.2021889686584473
+                    },
+                    "blocklist_check": {
+                        "input_text": "rebalance 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 2.563394069671631
+                    },
+                    "summary": {
+                        "all_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 2.630661964416504
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T10:42:33.345979",
+        "jira_agent_user": {
+            "input_results": null,
+            "output_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T10:42:36.328719",
+                    "pii_check": {
+                        "input_text": "Unable to analyze workload due to incomplete or malformed ticket data JSON provided. Please provide complete and valid ticket data JSON.",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 1.7063512802124023
+                    },
+                    "pii_modify": {
+                        "enabled": true,
+                        "redacted_text": "Unable to analyze workload due to incomplete or malformed ticket data JSON provided. Please provide complete and valid ticket data JSON.",
+                        "time_taken": 1.2710130214691162
+                    },
+                    "summary": {
+                        "output_check_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "total_time_taken": 2.9850528240203857
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T10:50:21.794435",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T10:50:24.403186",
+                    "sentiment_analysis": {
+                        "input_text": "rebalance board 6088",
+                        "sentiment_categories": {
+                            "positive": 0.0,
+                            "neutral": 1.0,
+                            "negative": 0.0,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 1.3224291801452637
+                    },
+                    "content_safety": {
+                        "input_text": "rebalance board 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 1.3318519592285156,
+                        "content_safety_detected": false
+                    },
+                    "pii_check": {
+                        "input_text": "rebalance board 6088",
+                        "entities": [
+                            {
+                                "entity": "rebalance",
+                                "category": "Organization",
+                                "confidence_score": 0.51,
+                                "offset": 0,
+                                "length": 9
+                            }
+                        ],
+                        "pii_detected": true,
+                        "pii_detected_count": 1,
+                        "time_taken": 1.334657907485962
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "prompt_injection": {
+                        "input_text": "rebalance board 6088",
+                        "detected": false,
+                        "time_taken": 1.3484230041503906
+                    },
+                    "blocklist_check": {
+                        "input_text": "rebalance board 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 2.56388783454895
+                    },
+                    "summary": {
+                        "all_passed": false,
+                        "failed_functions": [
+                            "pii_check"
+                        ]
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 2.6109330654144287
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T10:51:10.829473",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T10:51:13.399472",
+                    "sentiment_analysis": {
+                        "input_text": "rebalance board id 6088",
+                        "sentiment_categories": {
+                            "positive": 0.0,
+                            "neutral": 1.0,
+                            "negative": 0.0,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 1.1729209423065186
+                    },
+                    "content_safety": {
+                        "input_text": "rebalance board id 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 1.1753606796264648,
+                        "content_safety_detected": false
+                    },
+                    "pii_check": {
+                        "input_text": "rebalance board id 6088",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 1.1857850551605225
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "prompt_injection": {
+                        "input_text": "rebalance board id 6088",
+                        "detected": false,
+                        "time_taken": 1.2034907341003418
+                    },
+                    "blocklist_check": {
+                        "input_text": "rebalance board id 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 2.5252039432525635
+                    },
+                    "summary": {
+                        "all_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 2.572784185409546
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T10:51:27.218926",
+        "jira_agent_user": {
+            "input_results": null,
+            "output_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T10:51:29.663286",
+                    "pii_check": {
+                        "input_text": "```\nError: The ticket data provided is incomplete or malformed, causing a parsing error. Please provide the complete and correctly formatted ticket data JSON to proceed with workload analysis and rebalancing.\n```",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 1.1484808921813965
+                    },
+                    "pii_modify": {
+                        "enabled": true,
+                        "redacted_text": "```\nError: The ticket data provided is incomplete or malformed, causing a parsing error. Please provide the complete and correctly formatted ticket data JSON to proceed with workload analysis and rebalancing.\n```",
+                        "time_taken": 1.2935588359832764
+                    },
+                    "summary": {
+                        "output_check_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "total_time_taken": 2.4461870193481445
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T10:59:26.430898",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T10:59:28.798756",
+                    "sentiment_analysis": {
+                        "input_text": "rebalance the jira board 6088",
+                        "sentiment_categories": {
+                            "positive": 0.0,
+                            "neutral": 0.99,
+                            "negative": 0.0,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 1.222135066986084
+                    },
+                    "content_safety": {
+                        "input_text": "rebalance the jira board 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 1.2432641983032227,
+                        "content_safety_detected": false
+                    },
+                    "prompt_injection": {
+                        "input_text": "rebalance the jira board 6088",
+                        "detected": false,
+                        "time_taken": 1.258638858795166
+                    },
+                    "pii_check": {
+                        "input_text": "rebalance the jira board 6088",
+                        "entities": [
+                            {
+                                "entity": "jira",
+                                "category": "Organization",
+                                "confidence_score": 0.74,
+                                "offset": 14,
+                                "length": 4
+                            }
+                        ],
+                        "pii_detected": true,
+                        "pii_detected_count": 1,
+                        "time_taken": 1.3251841068267822
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "blocklist_check": {
+                        "input_text": "rebalance the jira board 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 2.3225011825561523
+                    },
+                    "summary": {
+                        "all_passed": false,
+                        "failed_functions": [
+                            "pii_check"
+                        ]
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 2.3705360889434814
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T10:59:47.470399",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T10:59:49.804779",
+                    "pii_check": {
+                        "input_text": "rebalance jira board id 6088",
+                        "entities": [
+                            {
+                                "entity": "jira",
+                                "category": "Organization",
+                                "confidence_score": 0.72,
+                                "offset": 10,
+                                "length": 4
+                            }
+                        ],
+                        "pii_detected": true,
+                        "pii_detected_count": 1,
+                        "time_taken": 1.1546690464019775
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "content_safety": {
+                        "input_text": "rebalance jira board id 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 1.16290283203125,
+                        "content_safety_detected": false
+                    },
+                    "sentiment_analysis": {
+                        "input_text": "rebalance jira board id 6088",
+                        "sentiment_categories": {
+                            "positive": 0.0,
+                            "neutral": 1.0,
+                            "negative": 0.0,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 1.1891331672668457
+                    },
+                    "prompt_injection": {
+                        "input_text": "rebalance jira board id 6088",
+                        "detected": false,
+                        "time_taken": 1.2221240997314453
+                    },
+                    "blocklist_check": {
+                        "input_text": "rebalance jira board id 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 2.2876458168029785
+                    },
+                    "summary": {
+                        "all_passed": false,
+                        "failed_functions": [
+                            "pii_check"
+                        ]
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 2.3366870880126953
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T11:01:08.504504",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T11:01:10.786277",
+                    "content_safety": {
+                        "input_text": "rebalance board id 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 1.1422052383422852,
+                        "content_safety_detected": false
+                    },
+                    "prompt_injection": {
+                        "input_text": "rebalance board id 6088",
+                        "detected": false,
+                        "time_taken": 1.1511788368225098
+                    },
+                    "sentiment_analysis": {
+                        "input_text": "rebalance board id 6088",
+                        "sentiment_categories": {
+                            "positive": 0.0,
+                            "neutral": 1.0,
+                            "negative": 0.0,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 1.1565251350402832
+                    },
+                    "pii_check": {
+                        "input_text": "rebalance board id 6088",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 1.1641740798950195
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "blocklist_check": {
+                        "input_text": "rebalance board id 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 2.234793186187744
+                    },
+                    "summary": {
+                        "all_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 2.2843761444091797
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T11:01:23.604883",
+        "jira_agent_user": {
+            "input_results": null,
+            "output_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T11:01:25.787907",
+                    "pii_check": {
+                        "input_text": "{\"error\":\"Failed to parse ticket data - JSON is malformed or incomplete, cannot perform workload analysis.\"}",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 1.1263160705566406
+                    },
+                    "pii_modify": {
+                        "enabled": true,
+                        "redacted_text": "{\"error\":\"Failed to parse ticket data - JSON is malformed or incomplete, cannot perform workload analysis.\"}",
+                        "time_taken": 1.0519673824310303
+                    },
+                    "summary": {
+                        "output_check_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "total_time_taken": 2.1841979026794434
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T11:08:23.532223",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T11:08:26.048830",
+                    "content_safety": {
+                        "input_text": "rebalance board id 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 1.2761659622192383,
+                        "content_safety_detected": false
+                    },
+                    "prompt_injection": {
+                        "input_text": "rebalance board id 6088",
+                        "detected": false,
+                        "time_taken": 1.2877318859100342
+                    },
+                    "sentiment_analysis": {
+                        "input_text": "rebalance board id 6088",
+                        "sentiment_categories": {
+                            "positive": 0.0,
+                            "neutral": 1.0,
+                            "negative": 0.0,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 1.3047711849212646
+                    },
+                    "pii_check": {
+                        "input_text": "rebalance board id 6088",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 1.3187198638916016
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "blocklist_check": {
+                        "input_text": "rebalance board id 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 2.472316026687622
+                    },
+                    "summary": {
+                        "all_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 2.518435001373291
+        }
+    },
+    {
+        "query_timestamp": "2026-01-12T11:08:41.460395",
+        "jira_agent_user": {
+            "input_results": null,
+            "output_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-12T11:08:43.668060",
+                    "pii_check": {
+                        "input_text": "```\n## Current Workload\n\n| Name | No of Tickets | To Do | In Progress | Completed | Total Story Points | Low Priority Incomplete | Medium Priority Incomplete | High Priority Incomplete |\n|--------------------|---------------|-------|-------------|-----------|--------------------|-----------------------|---------------------------|--------------------------|\n| Rishabh Ahuja      | 1             | 0     | 0           |",
+                        "entities": [
+                            {
+                                "entity": "Rishabh Ahuja",
+                                "category": "Person",
+                                "confidence_score": 0.99,
+                                "offset": 362,
+                                "length": 13
+                            }
+                        ],
+                        "pii_detected": true,
+                        "pii_detected_count": 1,
+                        "time_taken": 1.1302692890167236
+                    },
+                    "pii_modify": {
+                        "enabled": true,
+                        "redacted_text": "```\n## Current Workload\n\n| Name | No of Tickets | To Do | In Progress | Completed | Total Story Points | Low Priority Incomplete | Medium Priority Incomplete | High Priority Incomplete |\n|--------------------|---------------|-------|-------------|-----------|--------------------|-----------------------|---------------------------|--------------------------|\n| *************      | 1             | 0     | 0           |",
+                        "time_taken": 1.0744872093200684
+                    },
+                    "summary": {
+                        "output_check_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "total_time_taken": 2.209540843963623
+        }
+    }
+]

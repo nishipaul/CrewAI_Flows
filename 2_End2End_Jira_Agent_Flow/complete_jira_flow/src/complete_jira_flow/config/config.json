@@ -1,0 +1,20 @@
+{
+    "input_orchestrator": {
+        "functions": ["content_safety", "sentiment_check", "pii_check", "prompt_injection", "blocklist_check"],
+        "execution_mode": "parallel",
+        "content_safety_threshold": 2,
+        "enable_pii_modify": false,
+        "keep_categories": null,
+        "blocklist_names": null,
+        "break_by_blocklist": false
+    },
+    "output_orchestrator": {
+        "functions": ["pii_check", "groundedness_check"],
+        "execution_mode": "parallel",
+        "source_documents": null,
+        "enable_pii_modify": true,
+        "keep_categories": null,
+        "content_text": null,
+        "reasoning": false
+    }
+}

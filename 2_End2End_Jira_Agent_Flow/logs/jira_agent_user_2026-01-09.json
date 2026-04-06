@@ -1,0 +1,102 @@
+[
+    {
+        "query_timestamp": "2026-01-09T09:54:34.770431",
+        "jira_agent_user": {
+            "input_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-09T09:54:40.910096",
+                    "sentiment_analysis": {
+                        "input_text": "show board 6088",
+                        "sentiment_categories": {
+                            "positive": 0.0,
+                            "neutral": 1.0,
+                            "negative": 0.0,
+                            "overall_sentiment": "neutral"
+                        },
+                        "time_taken": 3.082977056503296
+                    },
+                    "pii_check": {
+                        "input_text": "show board 6088",
+                        "entities": [],
+                        "pii_detected": false,
+                        "pii_detected_count": 0,
+                        "time_taken": 3.109553813934326
+                    },
+                    "pii_modify": {
+                        "enabled": false
+                    },
+                    "content_safety": {
+                        "input_text": "show board 6088",
+                        "categories": {
+                            "Hate": 0,
+                            "SelfHarm": 0,
+                            "Sexual": 0,
+                            "Violence": 0
+                        },
+                        "threshold": 2,
+                        "time_taken": 3.12107515335083,
+                        "content_safety_detected": false
+                    },
+                    "prompt_injection": {
+                        "input_text": "show board 6088",
+                        "detected": false,
+                        "time_taken": 3.1234607696533203
+                    },
+                    "blocklist_check": {
+                        "input_text": "show board 6088",
+                        "blocklist_detected": false,
+                        "matched_items": [],
+                        "matched_count": 0,
+                        "blocklists_checked": [
+                            "strong_words"
+                        ],
+                        "break_by_blocklist": false,
+                        "time_taken": 6.094385147094727
+                    },
+                    "summary": {
+                        "all_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "output_results": null,
+            "total_time_taken": 6.1429338455200195
+        }
+    },
+    {
+        "query_timestamp": "2026-01-09T09:54:55.056273",
+        "jira_agent_user": {
+            "input_results": null,
+            "output_results": {
+                "query_timestamp": {
+                    "timestamp": "2026-01-09T09:54:56.981390",
+                    "pii_check": {
+                        "input_text": "## Current Workload\n\n| Name | No of Tickets | To Do | In Progress | Completed | Total Story Points | Low Priority Incomplete | Medium Priority Incomplete | High Priority Incomplete |\n|--------------------|---------------|-------|-------------|-----------|--------------------|-----------------------|---------------------------|--------------------------|\n| Rishabh Ahuja      | 1             | 0     | 0           | 0",
+                        "entities": [
+                            {
+                                "entity": "Rishabh Ahuja",
+                                "category": "Person",
+                                "confidence_score": 0.99,
+                                "offset": 358,
+                                "length": 13
+                            }
+                        ],
+                        "pii_detected": true,
+                        "pii_detected_count": 1,
+                        "time_taken": 0.9678452014923096
+                    },
+                    "pii_modify": {
+                        "enabled": true,
+                        "redacted_text": "## Current Workload\n\n| Name | No of Tickets | To Do | In Progress | Completed | Total Story Points | Low Priority Incomplete | Medium Priority Incomplete | High Priority Incomplete |\n|--------------------|---------------|-------|-------------|-----------|--------------------|-----------------------|---------------------------|--------------------------|\n| *************      | 1             | 0     | 0           | 0",
+                        "time_taken": 0.9522848129272461
+                    },
+                    "summary": {
+                        "output_check_passed": true,
+                        "failed_functions": []
+                    }
+                }
+            },
+            "total_time_taken": 1.926807165145874
+        }
+    }
+]
