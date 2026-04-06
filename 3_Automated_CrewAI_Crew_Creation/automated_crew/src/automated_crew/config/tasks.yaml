@@ -1,0 +1,9 @@
+hr_summary_task:
+  description: >
+    Summarize the provided HR document content.
+    Identify document type and extract key policies, processes,
+    responsibilities, eligibility criteria, and compliance requirements.
+    Highlight changes, exceptions, and required actions
+  expected_output: >
+    Clear and employee-friendly HR summary in plain text
+  agent: hr_summary_agent
